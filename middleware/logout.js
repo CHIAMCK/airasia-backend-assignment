@@ -1,10 +1,10 @@
-'use strict'
+// 'use strict'
 
-module.exports = {
-  logout
-}
+// module.exports = {
+//   logout
+// }
 
-async function logout (ctx, next) {
-  ctx.session = null
-  ctx.status = 201
-}
+// async function logout (ctx, next) {
+//   ctx.session = null
+//   ctx.status = 201
+// }

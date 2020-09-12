@@ -24,7 +24,7 @@ WORKDIR $appdir
 COPY package.json yarn.lock ./
 RUN yarn install --production
 
-ADD .$appdir
+ADD . $appdir
 
 # command that will get executed when running a container
 CMD ["yarn", "start"]

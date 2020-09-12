@@ -14,7 +14,6 @@
   "dependencies": {
     "@koa/cors": "2",
     "axios": "^0.18.0",
-    "bcrypt": "^1.0.3",
     "bull": "^3.4.4",
     "knex": "^0.14.4",
     "koa": "^2.5.0",
