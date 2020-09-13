@@ -5,8 +5,7 @@
 // const signup = require('./middleware/signup')
 const order = require('./middleware/order')
 const payment = require('./middleware/payment')
-const {validateOrderRequest} = require('./middleware/validate')
-
+const { validateOrderRequest } = require('./middleware/validate')
 
 module.exports = (router) => {
   // router.post('/login', login.validate, login.login)

@@ -1,6 +1,6 @@
 const TABLE_NAME = 'hotel_order'
 
-exports.up = function(knex, Promise) {
+exports.up = function (knex, Promise) {
   return knex.schema.createTable(TABLE_NAME, (table) => {
     table.uuid('id').notNullable().primary()
     table.uuid('hotel_id').notNullable()
@@ -18,8 +18,8 @@ exports.up = function(knex, Promise) {
     table.foreign('room_id').references('room.id')
     table.foreign('payment_id').references('payment.id')
   })
-};
+}
 
-exports.down = function(knex, Promise) {
+exports.down = function (knex, Promise) {
   return knex.schema.dropTableIfExists(TABLE_NAME)
-};
+}

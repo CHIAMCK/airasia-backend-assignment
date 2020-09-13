@@ -12,7 +12,8 @@ module.exports = {
 }
 
 const filterer = restfulFilter({
-  case_sensitive: false
+  case_sensitive: false,
+  per_page: 10
 })
 
 async function createOrder (ctx, next) {
@@ -26,6 +27,7 @@ async function createOrder (ctx, next) {
     .where('email', email)
     .limit(1)
 
+  // if customer data doesn't exist in database, store it
   if (customers.length === 0) {
     try {
       customer = await Customer.query().insert({
@@ -35,7 +37,7 @@ async function createOrder (ctx, next) {
         phone_number: phoneNumber
       })
     } catch (e) {
-      console.log(e)
+      return ctx.throw(400, e)
     }
   }
 
@@ -43,6 +45,7 @@ async function createOrder (ctx, next) {
     customer = customers.shift()
   }
 
+  // create payment
   let payment = await Payment.query().insert({
     id: uuid(),
     total_amount: totalAmount
@@ -59,15 +62,15 @@ async function createOrder (ctx, next) {
       customer_id: customer.id,
       payment_id: payment.id
     })
-    ctx.status = 201
-    ctx.body = order
   } catch (e) {
+    // if order is failed to create, delete the payment record
     await Payment.query().delete().where({
-        id: payment.id
-      })
-    ctx.status = 400
-    console.log(e)
+      id: payment.id
+    })
+    return ctx.throw(400, e)
   }
+  ctx.status = 201
+  ctx.body = order
   await next()
 }
 

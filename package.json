@@ -9,7 +9,7 @@
     "seed": "knex seed:run",
     "migrate": "knex migrate:latest",
     "setup-dev": "yarn migrate && yarn seed",
-    "test": "mocha --exit tests/bootstrap/**/*.js tests/"
+    "test": "mocha --exit tests/bootstrap/**/*.js --no-timeouts tests/"
   },
   "dependencies": {
     "@koa/cors": "2",

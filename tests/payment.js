@@ -24,22 +24,15 @@ describe('#auth', () => {
       })
   })
 
-  it('should be able to make a payment and return 200', () => {
+  it('should be able to update a payment and return 200', () => {
     return server
       .post('/v1/payments/5457b794-f585-11ea-adc1-0242ac120002/checkout')
-      .send({
-        customerId: "e265272b-5f22-43ae-9b0a-2ee363887dde",
-        cardNumber: "123-123-567-567",
-        securityCode: "890890",
-        validThru: "11/22"
-      })
       .then(async res => {
         const payments = await Payment.query().where({
-          id: "5457b794-f585-11ea-adc1-0242ac120002"
+          id: '5457b794-f585-11ea-adc1-0242ac120002'
         })
         const payment = payments.shift()
         payment.status.should.eql('Paid')
-
         res.status.should.eql(200)
       })
   })

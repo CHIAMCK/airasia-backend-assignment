@@ -1,6 +1,6 @@
 const TABLE_NAME = 'payment'
 
-exports.up = function(knex, Promise) {
+exports.up = function (knex, Promise) {
   return knex.schema.createTable(TABLE_NAME, (table) => {
     table.uuid('id').notNullable().primary()
     table.decimal('total_amount').notNullable()
@@ -10,8 +10,8 @@ exports.up = function(knex, Promise) {
     table.timestamp('deleted_at').nullable()
     table.timestamp('updated_at').nullable()
   })
-};
+}
 
-exports.down = function(knex, Promise) {
+exports.down = function (knex, Promise) {
   return knex.schema.dropTableIfExists(TABLE_NAME)
-};
+}
