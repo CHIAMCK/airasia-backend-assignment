@@ -2,13 +2,21 @@
 
 const Order = require('../model/order')
 const Customer = require('../model/customer')
+const Payment = require('../model/payment')
+const uuid = require('uuid/v4')
+const restfulFilter = require('restful-filter')
 
 module.exports = {
   createOrder,
-  validate
+  listOrder
 }
 
+const filterer = restfulFilter({
+  case_sensitive: false
+})
+
 async function createOrder (ctx, next) {
+  let order, customer
   const {
     hotelId, checkInDate, checkOutDate, name,
     email, phoneNumber, roomId, numberOfGuests, totalAmount
@@ -18,35 +26,88 @@ async function createOrder (ctx, next) {
     .where('email', email)
     .limit(1)
 
-  if (customers.length === 1) {
-    Customer.query().insert({
-      name: name,
-      email: email,
-      phoneNumber: phoneNumber
-    })
+  if (customers.length === 0) {
+    try {
+      customer = await Customer.query().insert({
+        id: uuid(),
+        name: name,
+        email: email,
+        phone_number: phoneNumber
+      })
+    } catch (e) {
+      console.log(e)
+    }
   }
 
-  const customer = customers.shift()
+  if (customers.length > 0) {
+    customer = customers.shift()
+  }
 
-  Order.query().insert({
-    hotelId: hotelId,
-    checkInDate: checkInDate,
-    checkOutDate: checkOutDate,
-    roomId: roomId,
-    totalAmount: totalAmount,
-    numberOfGuests: numberOfGuests,
-    customerId: customer.uuid
+  let payment = await Payment.query().insert({
+    id: uuid(),
+    total_amount: totalAmount
   })
 
-  ctx.status = 201
+  try {
+    order = await Order.query().insert({
+      id: uuid(),
+      hotel_id: hotelId,
+      check_in_date: checkInDate,
+      check_out_date: checkOutDate,
+      room_id: roomId,
+      number_of_guests: numberOfGuests,
+      customer_id: customer.id,
+      payment_id: payment.id
+    })
+    ctx.status = 201
+    ctx.body = order
+  } catch (e) {
+    await Payment.query().delete().where({
+        id: payment.id
+      })
+    ctx.status = 400
+    console.log(e)
+  }
   await next()
 }
 
-// valiate login payload
-// payload must consist of email and password
-async function validate (ctx, next) {
-  const payload = ctx.request.body
-  ctx.assert(payload && payload.email && payload.password, 401, 'Unauthorized')
-  ctx.state = payload
+async function listOrder (ctx, next) {
+  let order = []
+  let orderQuery
+  const queryParams = ctx.request.query
+
+  if (queryParams.hotel) {
+    // search by hotel name
+    const allowedColumn = ['name']
+    const searchParams = filterer.parse(queryParams, allowedColumn).filter
+
+    orderQuery = Order.query()
+      .select('check_in_date', 'check_out_date', 'name', 'hotel_order.id')
+      .innerJoin('hotel', 'hotel_order.hotel_id', 'hotel.id')
+
+    if (searchParams) {
+      for (const searchParam of searchParams) {
+        orderQuery.where(searchParam.column, searchParam.operatorSQL, searchParam.value)
+      }
+      order = await orderQuery
+    }
+  } else if (queryParams.customer) {
+    // search by customer details
+    const allowedColumn = ['name', 'email', 'phone_number']
+    const searchParams = filterer.parse(queryParams, allowedColumn).filter
+
+    orderQuery = Order.query()
+      .select('name', 'email', 'phone_number', 'check_in_date', 'check_out_date', 'hotel_order.id')
+      .innerJoin('customer', 'hotel_order.customer_id', 'customer.id')
+
+    if (searchParams) {
+      for (const searchParam of searchParams) {
+        orderQuery.where(searchParam.column, searchParam.operatorSQL, searchParam.value)
+      }
+      order = await orderQuery
+    }
+  }
+  ctx.body = order
+  ctx.status = 200
   await next()
 }
